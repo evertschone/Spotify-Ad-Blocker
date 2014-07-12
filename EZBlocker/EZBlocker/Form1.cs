@@ -299,17 +299,17 @@ namespace EZBlocker
 
             if (soundDeviceOverride && spotifyMute) 
             {
-                startInfo.Arguments = "/C nircmd muteappvolume Spotify.exe " + i.ToString() + " " + overrideDevice.ToString();
+                startInfo.Arguments = "/C nircmd muteappvolume Spotify.exe " + i.ToString() + " \"" + overrideDevice.ToString() + "\" ";
                 process.StartInfo = startInfo;
                 process.Start();
                 // Run again for some users
-                startInfo.Arguments = "/C nircmd muteappvolume spotify.exe " + i.ToString() + " " + overrideDevice.ToString();
+                startInfo.Arguments = "/C nircmd muteappvolume spotify.exe " + i.ToString() + " \"" + overrideDevice.ToString() + "\" ";
                 process.StartInfo = startInfo;
                 process.Start();
             }
             else if (soundDeviceOverride)
             {
-                startInfo.Arguments = "/C nircmd mutesubunitvolume Speaker " overrideDevice.ToString() + " " + i.ToString();
+                startInfo.Arguments = "/C nircmd mutesubunitvolume \"Speaker\"  \"" + overrideDevice.ToString() +  "\" " +i.ToString();
                 process.StartInfo = startInfo;
                 process.Start();
             }
