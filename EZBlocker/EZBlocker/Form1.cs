@@ -18,10 +18,12 @@ namespace EZBlocker
     {
         private string title = "Unset"; // Title of the Spotify window
         private string lastChecked = string.Empty; // Previous artist
+        private string overrideDevice = "some devicename"; // alternative device to mute when soundDeviceOverride=true, needs inputbox or inisetting somewhere.
         private bool autoAdd = false;
         private bool notify = false;
         private bool muted = false;
         private bool spotifyMute = false;
+        private bool soundDeviceOverride = false;  // add override variable, needs checkbox somewhere
         private uint pid = 0;
 
         private string blocklistPath = Application.StartupPath + @"\blocklist.txt";
@@ -101,6 +103,7 @@ namespace EZBlocker
             AutoAddCheckbox.Checked = Properties.Settings.Default.AutoAdd;
             NotifyCheckbox.Checked = Properties.Settings.Default.Notifications;
             SpotifyMuteCheckbox.Checked = Properties.Settings.Default.SpotifyMute;
+            SoundDeviceOverrideCheckbox.Checked = Properties.Settings.Default.SoundDeviceOverride; // get checkbox values?
             LogAction("/launch");
         }
 
@@ -291,7 +294,26 @@ namespace EZBlocker
             System.Diagnostics.ProcessStartInfo startInfo = new System.Diagnostics.ProcessStartInfo();
             startInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
             startInfo.FileName = "cmd.exe";
-            if (spotifyMute)
+            
+// new code for handling non systemdefault audio devices if device override is checked.
+
+            if (soundDeviceOverride && spotifyMute) 
+            {
+                startInfo.Arguments = "/C nircmd muteappvolume Spotify.exe " + i.ToString() + " " + overrideDevice.ToString();
+                process.StartInfo = startInfo;
+                process.Start();
+                // Run again for some users
+                startInfo.Arguments = "/C nircmd muteappvolume spotify.exe " + i.ToString() + " " + overrideDevice.ToString();
+                process.StartInfo = startInfo;
+                process.Start();
+            }
+            else if (soundDeviceOverride)
+            {
+                startInfo.Arguments = "/C nircmd mutesubunitvolume Speaker " overrideDevice.ToString() + " " + i.ToString();
+                process.StartInfo = startInfo;
+                process.Start();
+            }
+            else if (spotifyMute)
             {
                 AudioUtilities.SetApplicationMute("spotify", muted);
                 /*startInfo.Arguments = "/C nircmd muteappvolume Spotify.exe " + i.ToString();
@@ -549,6 +571,16 @@ namespace EZBlocker
             if (!spotifyMute) MessageBox.Show("You may need to restart Spotify for this to take affect", "EZBlocker");
             LogAction("/settings/spotifyMute/" + spotifyMute.ToString());
             Properties.Settings.Default.SpotifyMute = spotifyMute;
+            Properties.Settings.Default.Save();
+        }
+        
+        // add checkbox handling for override
+        private void SoundDeviceOverrideCheckBox_CheckedChanged(object sender, EventArgs e)
+        {
+            soundDeviceOverride = SoundDeviceOverrideCheckbox.Checked;
+            if (!soundDeviceOverride) MessageBox.Show("You may need to restart Spotify for this to take affect", "EZBlocker");
+            LogAction("/settings/soundDeviceOverride/" + soundDeviceOverride.ToString());
+            Properties.Settings.Default.SoundDeviceOverride = soundDeviceOverride;
             Properties.Settings.Default.Save();
         }
 
